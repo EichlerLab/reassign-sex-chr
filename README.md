@@ -1,5 +1,7 @@
 # reassign-sex-chr
 
+This pipeline was first designed by @projectoriented
+
 ## Methodology
 
 All contigs which align to the sex chromosomes are assigned into hap1 (chrY) and hap2 (chrX) based on alignments to a reference
