@@ -8,9 +8,9 @@ All contigs which align to the sex chromosomes are assigned into hap1 (chrY) and
 
 1. Alignments are made to a given reference with chrX and chrY (in most cases CHM13)
 2. Contigs are sorted into one of two categories:
-    - Complement
+    - Complement (Split)
       - Those contigs which do not have an overlap with another contig in the opposite haplotype but are located in the haplotype not designated to that sex chromosome
-    - Align
+    - Align (Duplicated)
       - Those contigs which have overlapping alignments with contigs in another haplotype for the same chromosome and coordinates
     -  By default these criteria are required to reach a 95% reciprocal overlap to determine similarity
 3. The pipeline can either produce just a list of contigs and their desired assignments, or reorder the input fasta files accordingly
