@@ -36,12 +36,15 @@ def get_both_subset_paf(wildcards):
 def get_mend_fasta_inputs(wildcards):
     all_inputs = {}
     s = wildcards.sample
-    for c in sex_chr:
+    # Meant to return matchs and complements for each chromosome
+    # as well as headers and fasta for each haplotype
+    # In addition to the hap1-chrX bed and the hap2-chrY bed to check for overlap
+    for h, c in zip(sex_chr, haps):
         all_inputs[f"matches-{c}"] = f"results/{s}/{c}-matches.txt"
         all_inputs[f"complements-{c}"] = f"results/{s}/{c}-complements.txt"
-    for h in haps:
         all_inputs[f"headers-{h}"] = f"results/{s}/{s}_{h}-fasta_headers.txt"
         all_inputs[f"fasta-{h}"] = manifest_df.at[s, h]
+        all_inputs[f"bed-{h}-{c}"] = f"results/{s}/{s}_{h}-subset_{c}.bed"
     return all_inputs
 
 
@@ -179,22 +182,30 @@ rule mend_fasta:
         """
         # we want to move all chrY relevant contigs to hap1
         # we want to move all chrX relevant contigs to hap2
+        ## Unless there is no overlap
         echo -e "ctg\\treason\\tchrom\\tdest" > {output.reassign_tab}
-        # extract chrX complements from hap1 fasta and then add to hap2 fasta
-        seqtk subseq {input.fasta-hap1} {input.complements-chrX} | sed -E 's/(>)(.*)/\\1\\2-adjusted/g; s/h1/h2/g' | seqtk seq -l 80 > {output.chrX_add_to_hap2}
-        sed 's/$/ complement chrX hap2/g' {input.complements-chrX} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
+        if [[ $( cat {input.bed-hap1-chrX} | wc -l ) == 0 ]] && [[ $( cat {input.bed-hap1-chrX} | wc -l ) == 0 ]]; then
+            touch {output.chrX_add_to_hap2}
+            touch {output.chrY_add_to_hap1}
+            ln -s $( readlink -f {input.fasta-hap1} ) {chrX_new_hap1}
+            ln -s $( readlink -f {input.fasta-hap2} ) {chrY_new_hap2}
+        else
+            # extract chrX complements from hap1 fasta and then add to hap2 fasta
+            seqtk subseq {input.fasta-hap1} {input.complements-chrX} | sed -E 's/(>)(.*)/\\1\\2-adjusted/g; s/h1/h2/g' | seqtk seq -l 80 > {output.chrX_add_to_hap2}
+            sed 's/$/ complement chrX hap2/g' {input.complements-chrX} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
 
-        # remove the matches + complements from hap1 fasta
-        seqtk subseq {input.fasta-hap1} <(grep -Ev "$(cat {input.matches-chrX} {input.complements-chrX})" {input.headers-hap1}) | seqtk seq -l 80 >  {output.chrX_new_hap1}
-        sed 's/$/ duplicate chrX hap2/g' {input.matches-chrX} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
+            # remove the matches + complements from hap1 fasta
+            seqtk subseq {input.fasta-hap1} <(grep -Ev "$(cat {input.matches-chrX} {input.complements-chrX})" {input.headers-hap1}) | seqtk seq -l 80 >  {output.chrX_new_hap1}
+            sed 's/$/ duplicate chrX hap2/g' {input.matches-chrX} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
 
-        # extract chrY complements from hap2 fasta and then add to hap1 fasta
-        seqtk subseq {input.fasta-hap2} {input.complements-chrY} | sed -E 's/(>)(.*)/\\1\\2-adjusted/g; s/h2/h1/g' | seqtk seq -l 80 > {output.chrY_add_to_hap1}
-        sed 's/$/ complement chrY hap1/g' {input.complements-chrY} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
+            # extract chrY complements from hap2 fasta and then add to hap1 fasta
+            seqtk subseq {input.fasta-hap2} {input.complements-chrY} | sed -E 's/(>)(.*)/\\1\\2-adjusted/g; s/h2/h1/g' | seqtk seq -l 80 > {output.chrY_add_to_hap1}
+            sed 's/$/ complement chrY hap1/g' {input.complements-chrY} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
 
-        # remove the matches + complements from hap2 fasta
-        seqtk subseq {input.fasta-hap2} <(grep -Ev "$(cat {input.matches-chrY} {input.complements-chrY})" {input.headers-hap2}) | seqtk seq -l 80 >  {output.chrY_new_hap2}    
-        sed 's/$/ duplicate chrY hap1/g' {input.matches-chrY} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}    
+            # remove the matches + complements from hap2 fasta
+            seqtk subseq {input.fasta-hap2} <(grep -Ev "$(cat {input.matches-chrY} {input.complements-chrY})" {input.headers-hap2}) | seqtk seq -l 80 >  {output.chrY_new_hap2}    
+            sed 's/$/ duplicate chrY hap1/g' {input.matches-chrY} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
+        fi 
         """
 
 
