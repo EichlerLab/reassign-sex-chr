@@ -187,8 +187,8 @@ rule mend_fasta:
         if [[ $( cat {input.bed-hap1-chrX} | wc -l ) == 0 ]] && [[ $( cat {input.bed-hap1-chrX} | wc -l ) == 0 ]]; then
             touch {output.chrX_add_to_hap2}
             touch {output.chrY_add_to_hap1}
-            ln -s $( readlink -f {input.fasta-hap1} ) {chrX_new_hap1}
-            ln -s $( readlink -f {input.fasta-hap2} ) {chrY_new_hap2}
+            ln -s $( readlink -f {input.fasta-hap1} ) {output.chrX_new_hap1}
+            ln -s $( readlink -f {input.fasta-hap2} ) {output.chrY_new_hap2}
         else
             # extract chrX complements from hap1 fasta and then add to hap2 fasta
             seqtk subseq {input.fasta-hap1} {input.complements-chrX} | sed -E 's/(>)(.*)/\\1\\2-adjusted/g; s/h1/h2/g' | seqtk seq -l 80 > {output.chrX_add_to_hap2}
