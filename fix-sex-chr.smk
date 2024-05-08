@@ -39,7 +39,7 @@ def get_mend_fasta_inputs(wildcards):
     # Meant to return matchs and complements for each chromosome
     # as well as headers and fasta for each haplotype
     # In addition to the hap1-chrX bed and the hap2-chrY bed to check for overlap
-    for h, c in zip(sex_chr, haps):
+    for c, h in zip(sex_chr, haps):
         all_inputs[f"matches-{c}"] = f"results/{s}/{c}-matches.txt"
         all_inputs[f"complements-{c}"] = f"results/{s}/{c}-complements.txt"
         all_inputs[f"headers-{h}"] = f"results/{s}/{s}_{h}-fasta_headers.txt"
