@@ -186,7 +186,7 @@ rule mend_fasta:
 
         # remove the matches + complements from hap1 fasta
         seqtk subseq {input.fasta-hap1} <(grep -Ev "$(cat {input.matches-chrX} {input.complements-chrX})" {input.headers-hap1}) | seqtk seq -l 80 >  {output.chrX_new_hap1}
-        sed 's/$/ align chrX hap2/g' <(cat {input.matches-chrX} {input.complements-chrX}) | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
+        sed 's/$/ duplicate chrX hap2/g' {input.matches-chrX} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}
 
         # extract chrY complements from hap2 fasta and then add to hap1 fasta
         seqtk subseq {input.fasta-hap2} {input.complements-chrY} | sed -E 's/(>)(.*)/\\1\\2-adjusted/g; s/h2/h1/g' | seqtk seq -l 80 > {output.chrY_add_to_hap1}
@@ -194,7 +194,7 @@ rule mend_fasta:
 
         # remove the matches + complements from hap2 fasta
         seqtk subseq {input.fasta-hap2} <(grep -Ev "$(cat {input.matches-chrY} {input.complements-chrY})" {input.headers-hap2}) | seqtk seq -l 80 >  {output.chrY_new_hap2}    
-        sed 's/$/ align chrY hap1/g' <(cat {input.matches-chrY} {input.complements-chrY}) | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}    
+        sed 's/$/ duplicate chrY hap1/g' {input.matches-chrY} | awk -vOFS="\\t" '{{print $1,$2,$3,$4}}' 2>&1 | tee -a {output.reassign_tab}    
         """
 
 
