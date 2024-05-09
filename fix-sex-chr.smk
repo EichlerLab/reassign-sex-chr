@@ -12,7 +12,7 @@ COMP_ARGS = config.get("complement_args", "-f 0.95 -r -v")
 
 manifest_df = pd.read_csv(MANIFEST, sep="\t", index_col="sample", comment="#")
 haps = manifest_df.columns
-sex_chr = ["chrX", "chrY"]
+sex_chr = ["chrY", "chrX"]
 
 
 wildcard_constraints:
@@ -184,7 +184,7 @@ rule mend_fasta:
         # we want to move all chrX relevant contigs to hap2
         ## Unless there is no overlap
         echo -e "ctg\\treason\\tchrom\\tdest" > {output.reassign_tab}
-        if [[ $( cat {input.bed-hap1-chrX} | wc -l ) == 0 ]] && [[ $( cat {input.bed-hap1-chrX} | wc -l ) == 0 ]]; then
+        if [[ $( cat {input.bed-hap1-chrY} | wc -l ) == 0 ]] && [[ $( cat {input.bed-hap2-chrX} | wc -l ) == 0 ]]; then
             touch {output.chrX_add_to_hap2}
             touch {output.chrY_add_to_hap1}
             ln -s $( readlink -f {input.fasta-hap1} ) {output.chrX_new_hap1}
